@@ -7,11 +7,8 @@ A cross-platform desktop application for tracking finish times in marathons and 
 - **Multi-Category Support**: Load multiple CSV files as different race categories
 - **Independent Timers**: Each category has its own timer that can be started independently
 - **Fast Input**: Type participant ID + Enter to record finish times instantly
-- **Live Updates**: Real-time timer displays and recent entries preview
-- **Smart Validation**: Automatically detects participant category with warnings for invalid IDs
 - **Session Management**: Auto-save functionality with manual save/load options
 - **Excel Export**: Generate multi-sheet Excel reports with all results
-- **Modern UI**: Clean, responsive interface optimized for fast data entry
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 
 ## Installation
@@ -20,20 +17,88 @@ A cross-platform desktop application for tracking finish times in marathons and 
 
 - Python 3.8 or higher
 - pip (Python package installer)
+- Git (for cloning the repository)
 
-### Setup
+### Detailed Setup
 
-1. Clone or download this repository
+Follow these step-by-step instructions to set up the MTB Time Tracker on your computer.
 
-2. Install dependencies:
+#### Step 1: Clone the Repository
+
+Open your terminal (Command Prompt on Windows, Terminal on macOS/Linux) and run:
+
+```bash
+git clone https://github.com/a-aigner/mtb-timetracking.git
+cd mtb-timetracking
+```
+
+#### Step 2: Create a Virtual Environment
+
+A virtual environment keeps the project dependencies isolated from your system Python installation.
+
+**On Windows:**
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**On macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+You should see `(venv)` appear at the beginning of your command prompt, indicating the virtual environment is active.
+
+#### Step 3: Install Dependencies
+
+With the virtual environment activated, install all required packages:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Run the application:
+This will install:
+- PyQt6 (GUI framework)
+- pandas (data handling)
+- openpyxl (Excel export)
+- pyinstaller (for building executables)
+
+#### Step 4: Run the Application
+
+Start the application with:
+
 ```bash
 python main.py
 ```
+
+The MTB Time Tracker window should open and be ready to use!
+
+#### Step 5: (Optional) Deactivate Virtual Environment
+
+When you're done using the application, you can deactivate the virtual environment:
+
+```bash
+deactivate
+```
+
+### Quick Start After Initial Setup
+
+Once you've completed the initial setup, you only need to:
+
+1. Navigate to the project directory:
+   ```bash
+   cd mtb-timetracking
+   ```
+
+2. Activate the virtual environment:
+   - **Windows**: `venv\Scripts\activate`
+   - **macOS/Linux**: `source venv/bin/activate`
+
+3. Run the application:
+   ```bash
+   python main.py
+   ```
 
 ## Usage
 
