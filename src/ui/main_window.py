@@ -79,21 +79,7 @@ class MainWindow(QMainWindow):
         
         main_layout.addLayout(header_layout)
         
-        # Categories section - show 2 side by side
-        categories_label = QLabel("Categories")
-        categories_label.setStyleSheet("font-size: 16px; font-weight: 600; color: #000000; background-color: #ffffff; margin-top: 8px;")
-        main_layout.addWidget(categories_label)
-        
-        # Container for categories (no scroll, just 2 side by side)
-        self.categories_container = QWidget()
-        self.categories_layout = QHBoxLayout(self.categories_container)
-        self.categories_layout.setSpacing(16)
-        self.categories_layout.setContentsMargins(0, 0, 0, 0)
-        self.categories_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        
-        main_layout.addWidget(self.categories_container)
-        
-        # Input section - below categories, centered
+        # Input section - centered at top
         input_section = QVBoxLayout()
         input_section.setSpacing(8)
         
@@ -126,6 +112,20 @@ class MainWindow(QMainWindow):
         
         main_layout.addLayout(input_section)
         
+        # Categories section - show 2 side by side
+        categories_label = QLabel("Categories")
+        categories_label.setStyleSheet("font-size: 16px; font-weight: 600; color: #000000; background-color: #ffffff; margin-top: 8px;")
+        main_layout.addWidget(categories_label)
+        
+        # Container for categories (no scroll, just 2 side by side)
+        self.categories_container = QWidget()
+        self.categories_layout = QHBoxLayout(self.categories_container)
+        self.categories_layout.setSpacing(16)
+        self.categories_layout.setContentsMargins(0, 0, 0, 0)
+        self.categories_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        main_layout.addWidget(self.categories_container)
+        
         # Recent entries section - at bottom
         recent_label = QLabel("Recent Entries")
         recent_label.setStyleSheet("font-size: 14px; font-weight: 600; color: #000000; background-color: #ffffff; margin-top: 8px;")
@@ -133,10 +133,16 @@ class MainWindow(QMainWindow):
         
         self.recent_entries_table = QTableWidget()
         self.recent_entries_table.setColumnCount(4)
-        self.recent_entries_table.setHorizontalHeaderLabels(["Time", "ID", "Name", "Category"])
-        self.recent_entries_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        self.recent_entries_table.setHorizontalHeaderLabels(["ID", "NAME", "CATEGORY", "TIME"])
+        self.recent_entries_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.recent_entries_table.setMaximumHeight(180)
         self.recent_entries_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.recent_entries_table.setShowGrid(False)
+        self.recent_entries_table.setAlternatingRowColors(False)
+        self.recent_entries_table.verticalHeader().setVisible(False)
+        # Enable inline editing on double-click
+        self.recent_entries_table.setEditTriggers(QTableWidget.EditTrigger.DoubleClicked)
+        self.recent_entries_table.itemChanged.connect(self.on_recent_entry_item_changed)
         main_layout.addWidget(self.recent_entries_table)
         
         # Update recent entries initially
@@ -289,45 +295,138 @@ class MainWindow(QMainWindow):
     
     def update_recent_entries(self):
         """Update the recent entries table."""
+        # Temporarily block signals to avoid triggering itemChanged during update
+        self.recent_entries_table.blockSignals(True)
+        
         all_entries = self.session.get_all_entries()[:20]  # Last 20 entries
         
         self.recent_entries_table.setRowCount(len(all_entries))
         
         for i, entry in enumerate(all_entries):
-            # Time
-            time_item = QTableWidgetItem(entry.format_finish_time())
-            self.recent_entries_table.setItem(i, 0, time_item)
-            
-            # ID
+            # ID (editable)
             id_item = QTableWidgetItem(entry.participant_id)
+            id_item.setData(Qt.ItemDataRole.UserRole, entry.entry_id)  # Store entry_id
+            id_item.setFlags(id_item.flags() | Qt.ItemFlag.ItemIsEditable)
+            id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             if not entry.is_valid_id:
                 id_item.setBackground(QColor(200, 200, 200))  # Gray highlight for invalid IDs
                 font = id_item.font()
                 font.setBold(True)
                 id_item.setFont(font)
-            self.recent_entries_table.setItem(i, 1, id_item)
+            self.recent_entries_table.setItem(i, 0, id_item)
             
-            # Name
+            # Name (read-only)
             name_item = QTableWidgetItem(entry.get_full_name())
-            self.recent_entries_table.setItem(i, 2, name_item)
+            name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            name_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.recent_entries_table.setItem(i, 1, name_item)
             
-            # Category
-            category_item = QTableWidgetItem(entry.category_name)
-            # Use grayscale coding by category - make text bold and use different shades
-            category = self.session.get_category(entry.category_name)
-            if category:
-                cat_index = self.session.categories.index(category)
-                from .styles import get_category_color
-                color = QColor(get_category_color(cat_index))
-                # Make lighter for background
-                lightness = 200 + (cat_index * 10) % 50  # Vary between 200-250
-                category_item.setBackground(QColor(lightness, lightness, lightness))
-                font = category_item.font()
-                font.setBold(True)
-                category_item.setFont(font)
-            self.recent_entries_table.setItem(i, 3, category_item)
+            # Category (read-only)
+            # Show "-" for invalid IDs instead of category name
+            if entry.is_valid_id:
+                category_item = QTableWidgetItem(entry.category_name)
+                # Use grayscale coding by category - make text bold and use different shades
+                category = self.session.get_category(entry.category_name)
+                if category:
+                    cat_index = self.session.categories.index(category)
+                    from .styles import get_category_color
+                    color = QColor(get_category_color(cat_index))
+                    # Make lighter for background
+                    lightness = 200 + (cat_index * 10) % 50  # Vary between 200-250
+                    category_item.setBackground(QColor(lightness, lightness, lightness))
+                    font = category_item.font()
+                    font.setBold(True)
+                    category_item.setFont(font)
+            else:
+                category_item = QTableWidgetItem("-")
+                category_item.setForeground(QColor(150, 150, 150))  # Gray text
+            
+            category_item.setFlags(category_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            category_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.recent_entries_table.setItem(i, 2, category_item)
+            
+            # Time (read-only) - show elapsed time
+            time_item = QTableWidgetItem(entry.format_elapsed_time())
+            time_item.setFlags(time_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            time_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.recent_entries_table.setItem(i, 3, time_item)
         
-        self.recent_entries_table.resizeColumnsToContents()
+        # Don't call resizeColumnsToContents() - we're using stretch mode
+        
+        # Re-enable signals
+        self.recent_entries_table.blockSignals(False)
+    
+    def on_recent_entry_item_changed(self, item):
+        """Handle when an item is edited in the recent entries table."""
+        # Only process ID column (column 0)
+        if item.column() != 0:
+            return
+        
+        new_id = item.text().strip()
+        entry_id = item.data(Qt.ItemDataRole.UserRole)
+        
+        if not new_id or not entry_id:
+            return
+        
+        # Find the entry in all categories
+        entry = None
+        category = None
+        for cat in self.session.categories:
+            entry = next((e for e in cat.entries if e.entry_id == entry_id), None)
+            if entry:
+                category = cat
+                break
+        
+        if not entry or not category:
+            return
+        
+        # If ID hasn't changed, do nothing
+        if new_id == entry.participant_id:
+            return
+        
+        # Update ID and search for participant data
+        entry.participant_id = new_id
+        
+        found_category = None
+        participant_data = None
+        
+        for cat in self.session.categories:
+            if cat.has_participant(new_id):
+                found_category = cat
+                participant_data = cat.get_participant_data(new_id)
+                break
+        
+        # Update entry with new participant data
+        if participant_data:
+            entry.first_name = participant_data.get('first_name', '')
+            entry.last_name = participant_data.get('last_name', '')
+            entry.team = participant_data.get('team', '')
+            entry.birth_year = participant_data.get('birth_year', '')
+            entry.gender = participant_data.get('gender', '')
+            entry.is_valid_id = True
+            
+            # Update category if it changed
+            if found_category and found_category.name != entry.category_name:
+                # Move entry to correct category
+                category.entries.remove(entry)
+                entry.category_name = found_category.name
+                found_category.add_entry(entry)
+                self.update_category_widget(found_category)
+            
+            self.show_status(f"✓ Updated: {entry.get_full_name()} ({new_id})", "success")
+        else:
+            # ID not found - mark as invalid
+            entry.is_valid_id = False
+            entry.first_name = ''
+            entry.last_name = ''
+            entry.team = ''
+            entry.birth_year = ''
+            entry.gender = ''
+            self.show_status(f"⚠ ID {new_id} not found in any category", "warning")
+        
+        # Update displays
+        self.update_category_widget(category)
+        self.update_recent_entries()
     
     def edit_entry(self, entry_id: str, category_name: str):
         """Edit an entry's ID."""

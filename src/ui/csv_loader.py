@@ -83,24 +83,11 @@ class CSVLoaderDialog(QDialog):
         layout.addWidget(preview_label)
         
         self.preview_table = QTableWidget()
-        self.preview_table.setAlternatingRowColors(True)
+        self.preview_table.setAlternatingRowColors(False)
+        self.preview_table.setShowGrid(False)
+        self.preview_table.verticalHeader().setVisible(False)  # Hide row numbers
         self.preview_table.setStyleSheet("""
             QTableWidget {
-                border: 1px solid #e5e5e5;
-                border-radius: 6px;
-                background-color: #ffffff;
-            }
-            QGroupBox {
-                border: 1px solid #e5e5e5;
-                border-radius: 6px;
-                background-color: #ffffff;
-            }
-            QHBoxLayout {
-                border: 1px solid #e5e5e5;
-                border-radius: 6px;
-                background-color: #ffffff;
-            }
-            QLineEdit {
                 border: 1px solid #e5e5e5;
                 border-radius: 6px;
                 background-color: #ffffff;

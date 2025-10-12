@@ -125,15 +125,25 @@ def get_app_stylesheet() -> str:
     }
     
     QLabel#timer_label_running {
+        font-size: 40px;
+        font-weight: 700;
         color: #000000;
+        padding: 16px;
         background-color: #ffffff;
         border: 1px solid #d4d4d4;
+        border-radius: 8px;
+        qproperty-alignment: AlignCenter;
     }
     
     QLabel#timer_label_stopped {
+        font-size: 40px;
+        font-weight: 700;
         color: #000000;
+        padding: 16px;
         background-color: #ffffff;
         border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        qproperty-alignment: AlignCenter;
     }
     
     QLabel#category_name {
@@ -159,34 +169,48 @@ def get_app_stylesheet() -> str:
         border: 1px solid #d4d4d4;
     }
     
-    /* Table styling */
+    /* Table styling - Minimalistic */
     QTableWidget {
-        background-color: white;
-        border: 1px solid #d4d4d4;
-        border-radius: 6px;
-        gridline-color: #e5e5e5;
-        font-size: 12px;
+        background-color: #ffffff;
+        border: none;
+        border-top: 1px solid #e5e5e5;
+        border-bottom: 1px solid #e5e5e5;
+        gridline-color: #f5f5f5;
+        font-size: 13px;
         color: #000000;
+        selection-background-color: #f9f9f9;
     }
     
     QTableWidget::item {
-        padding: 6px 8px;
+        padding: 10px 12px;
         color: #000000;
+        border: none;
+        border-bottom: 1px solid #f5f5f5;
     }
     
     QTableWidget::item:selected {
-        background-color: #f5f5f5;
+        background-color: #f9f9f9;
         color: #000000;
     }
     
+    QTableWidget::item:hover {
+        background-color: #fafafa;
+    }
+    
     QHeaderView::section {
-        background-color: #000000;
-        color: #ffffff;
-        padding: 8px 10px;
+        background-color: #ffffff;
+        color: #666666;
+        padding: 12px;
         border: none;
-        border-bottom: 2px solid #000000;
+        border-bottom: 1px solid #e5e5e5;
         font-weight: 600;
-        font-size: 12px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    QHeaderView::section:hover {
+        background-color: #fafafa;
     }
     
     /* ScrollArea styling */
@@ -316,9 +340,19 @@ def get_app_stylesheet() -> str:
     QLineEdit {
         color: #000000;
         background-color: #ffffff;
-        border: 2px solid #000000;
+        border: 1px solid #e5e5e5;
         padding: 5px;
         border-radius: 4px;
+    }
+    
+    /* Remove border from table cell editors */
+    QTableWidget QLineEdit {
+        border: none;
+        padding: 0px;
+        margin: 0px;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 13px;
     }
     """
 

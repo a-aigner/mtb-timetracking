@@ -40,23 +40,10 @@ class CategoryWidget(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
         
-        # Category name with number badge
-        name_layout = QHBoxLayout()
-        
-        # Category number badge
-        category_number = QLabel(f"#{self.color_index + 1}")
-        category_number.setStyleSheet(
-            "font-size: 16px; font-weight: 600; color: #000000; "
-            "background-color: #ffffff; padding: 4px 10px; border: 2px solid #000000; border-radius: 4px;"
-        )
-        category_number.setFixedWidth(45)
-        name_layout.addWidget(category_number)
-        
+        # Category name
         self.name_label = QLabel(self.category.name)
         self.name_label.setObjectName("category_name")
-        name_layout.addWidget(self.name_label, 1)
-        
-        layout.addLayout(name_layout)
+        layout.addWidget(self.name_label)
         
         # Timer display
         self.timer_label = QLabel("00:00:00")
@@ -74,26 +61,13 @@ class CategoryWidget(QWidget):
         self.control_btn.clicked.connect(self.toggle_timer)
         layout.addWidget(self.control_btn)
         
-        # Recent entries table
-        entries_label = QLabel("Recent Finishers")
-        entries_label.setStyleSheet("font-weight: 600; font-size: 13px; margin-top: 8px; color: #000000; background-color: #ffffff;")
-        layout.addWidget(entries_label)
-        
-        self.entries_table = QTableWidget()
-        self.entries_table.setColumnCount(3)
-        self.entries_table.setHorizontalHeaderLabels(["ID", "Name", "Time"])
-        self.entries_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.entries_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.entries_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.entries_table.customContextMenuRequested.connect(self.show_context_menu)
-        self.entries_table.setFixedHeight(250)
-        layout.addWidget(self.entries_table)
-        
-        # No stretch - fixed height
+        # Add stretch to push content to top
+        layout.addStretch()
         
         # Set size policy for responsive 2-column layout
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setMinimumWidth(400)
+        self.setMaximumHeight(250)
         
         # Initial update
         self.update_display()
@@ -140,81 +114,26 @@ class CategoryWidget(QWidget):
             self.timer_label.setObjectName("timer_label")
         self.timer_label.setStyleSheet("")  # Reset to apply new object name
         
-        # Update entries table
-        recent_entries = self.category.get_recent_entries(15)
-        recent_entries.reverse()  # Show most recent first
-        
-        self.entries_table.setRowCount(len(recent_entries))
-        
-        for i, entry in enumerate(recent_entries):
-            # ID
-            id_item = QTableWidgetItem(entry.participant_id)
-            id_item.setData(Qt.ItemDataRole.UserRole, entry.entry_id)  # Store entry_id
-            if not entry.is_valid_id:
-                id_item.setBackground(QColor(200, 200, 200))  # Light gray highlight
-                font = id_item.font()
-                font.setBold(True)
-                id_item.setFont(font)
-            if entry.is_dnf:
-                id_item.setForeground(QColor(0, 0, 0))  # Black text
-                id_item.setBackground(QColor(230, 230, 230))  # Lighter gray
-            self.entries_table.setItem(i, 0, id_item)
-            
-            # Name
-            name_item = QTableWidgetItem(entry.get_full_name())
-            if entry.is_dnf:
-                name_item.setForeground(QColor(0, 0, 0))
-                name_item.setBackground(QColor(230, 230, 230))
-                font = name_item.font()
-                font.setItalic(True)
-                name_item.setFont(font)
-            self.entries_table.setItem(i, 1, name_item)
-            
-            # Time
-            time_item = QTableWidgetItem(entry.format_elapsed_time())
-            if entry.is_dnf:
-                time_item.setText("DNF")
-                time_item.setForeground(QColor(0, 0, 0))
-                time_item.setBackground(QColor(230, 230, 230))
-                font = time_item.font()
-                font.setBold(True)
-                time_item.setFont(font)
-            self.entries_table.setItem(i, 2, time_item)
-        
-        self.entries_table.resizeColumnsToContents()
+        # Update button text and state based on timer state
+        if self.category.timer.state == TimerState.RUNNING:
+            self.control_btn.setText("Stop Timer")
+            self.control_btn.setObjectName("stop_button")
+            self.control_btn.setEnabled(True)
+            # Force style update
+            self.control_btn.style().unpolish(self.control_btn)
+            self.control_btn.style().polish(self.control_btn)
+        elif self.category.timer.state == TimerState.STOPPED:
+            self.control_btn.setText("Timer Stopped")
+            self.control_btn.setEnabled(False)
+        else:
+            self.control_btn.setText("Start Timer")
+            self.control_btn.setObjectName("start_button")
+            self.control_btn.setEnabled(True)
+            # Force style update
+            self.control_btn.style().unpolish(self.control_btn)
+            self.control_btn.style().polish(self.control_btn)
     
     def show_context_menu(self, position):
-        """Show context menu for entries table."""
-        if self.entries_table.rowCount() == 0:
-            return
-        
-        row = self.entries_table.rowAt(position.y())
-        if row < 0:
-            return
-        
-        menu = QMenu(self)
-        
-        edit_action = menu.addAction("Edit Time")
-        delete_action = menu.addAction("Delete Entry")
-        menu.addSeparator()
-        dnf_action = menu.addAction("Mark as DNF")
-        
-        action = menu.exec(self.entries_table.viewport().mapToGlobal(position))
-        
-        if action:
-            id_item = self.entries_table.item(row, 0)
-            if id_item:
-                entry_id = id_item.data(Qt.ItemDataRole.UserRole)
-                
-                if action == edit_action:
-                    self.entry_edited.emit(entry_id, self.category.name)
-                elif action == delete_action:
-                    self.entry_deleted.emit(entry_id, self.category.name)
-                elif action == dnf_action:
-                    # Find and mark entry as DNF
-                    for entry in self.category.entries:
-                        if entry.entry_id == entry_id:
-                            entry.is_dnf = True
-                            self.update_display()
-                            break
+        """Show context menu - not used anymore since table was removed."""
+        pass
 
