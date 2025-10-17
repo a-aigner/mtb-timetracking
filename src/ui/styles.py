@@ -82,6 +82,8 @@ def get_app_stylesheet() -> str:
         font-weight: 600;
         border: 1px solid #000000;
         border-radius: 6px;
+        min-width: 80px;
+        max-width: 120px;
     }
     
     QPushButton#start_button:hover {
@@ -91,11 +93,14 @@ def get_app_stylesheet() -> str:
     QPushButton#stop_button {
         background-color: #ffffff;
         color: #000000;
-        padding: 10px 20px;
+        padding: 12px 16px;
         font-size: 14px;
         font-weight: 600;
         border: 1px solid #d4d4d4;
-        border-radius: 6px;
+        border-radius: 50%;
+        min-width: 80px;
+        max-width: 120px;
+        min-height: 40px;
     }
     
     QPushButton#stop_button:hover {

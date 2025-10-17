@@ -15,8 +15,8 @@ def build_windows():
         'main.py',
         '--name=MTBTimeTracker',
         '--windowed',  # No console window
-        '--onedir',  # Create a directory with all dependencies
-        '--icon=NONE',  # Add icon file path if you have one
+        '--onefile',  # Create a directory with all dependencies
+        '--icon=./logo.ico',  # Add icon file path if you have one
         f'--distpath={root_dir / "dist"}',
         f'--workpath={root_dir / "build"}',
         f'--specpath={root_dir}',
